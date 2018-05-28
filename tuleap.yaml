@@ -1,0 +1,53 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: tuleap-svc
+  namespace: tools
+  labels:
+    app: tuleap
+spec:
+  type: NodePort
+  ports:
+  - port: 8080
+    targetPort: 80
+    protocol: TCP
+    name: http
+  - port: 9443
+    targetPort: 443
+    protocol: TCP
+    name: https
+  selector:
+    app: tuleap
+---
+apiVersion: apps/v1beta1 # for versions before 1.6.0 use extensions/v1beta1
+kind: Deployment
+metadata:
+  name: tuleap-deployment
+  namespace: tools
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: tuleap
+    spec:
+      volumes:
+      - name: tuleap-data
+
+      containers:
+      - name: tuleap
+        image: enalean/tuleap-aio
+        ports:
+        - containerPort: 80
+          name: "http-server"
+        - containerPort: 443
+          name: "https-server"
+        - containerPort: 22
+          name: "ssh-server"
+        volumeMounts:
+        - mountPath: "/data"
+          name: tuleap-data
+        env:
+        - name: VIRTUAL_HOST
+          value: "192.168.99.100"
+
